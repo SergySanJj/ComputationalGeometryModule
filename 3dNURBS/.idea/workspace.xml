@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="21a49620-be85-429f-8117-a31332db3e72" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/3dNURBS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/3dNURBS.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/__main__.py" afterDir="false" />
     </list>
@@ -85,7 +84,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>

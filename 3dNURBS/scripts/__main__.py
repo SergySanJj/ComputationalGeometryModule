@@ -5,56 +5,99 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-def get_knots_vec(control_points, spline_deg):
-    knot_vector = []
-    for i in range(spline_deg):
-        knot_vector.append(0)
 
-    m = spline_deg + len(control_points) + 1 - 2 * p
-    for i in range(m):
-        knot_vector.append(i / (m - 1))
-
-    for i in range(spline_deg):
-        knot_vector.append(1)
-
-    return knot_vector
-
-def N(i, p, u, knots: List[float]):
-    if p == 0:
-        if knots[i] <= u <= knots[i + 1]:
-            return 1.
+def N(i, k, t, u):
+    if k == 1:
+        if u[i] <= t <= u[i + 1]:
+            return 1
         else:
-            return 0.
-    return ((u - knots[i]) / (knots[i + p] - knots[i])) * N(i, p - 1, u, knots) + \
-           ((knots[i + p + 1] - u) / (knots[i + p + 1] - knots[i + 1])) * N(i + 1, p - 1, u, knots)
+            return 0
 
+    if u[i + k - 1] - u[i]:
+        term_left = ((t - u[i]) * N(i, k - 1, t, u)) / (u[i + k - 1] - u[i])
+    else:
+        term_left = 0
 
-def R(i,j,u,v):
-    top = N(im)
+    if u[i + k] - u[i + 1]:
+        term_right = ((u[i + k] - t) * N(i + 1, k - 1, t, u)) / (u[i + k] - u[i + 1])
+    else:
+        term_right = 0
 
-class Knot:
-    def __init__(self, x: float, y: float, z: float, w=1.):
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
-        self.w: float = w
-
-
-def nurbs_patch_point(knots: List[Knot], u: float, v: float):
-    x = 0
-    y = 0
-    z = 0
-    for knot in knots:
+    return term_left + term_right
 
 
 def main():
-    print("hello", get_NURBS_points(["a", "b"]))
-    x = np.linspace(-np.pi, np.pi, 50)
-    y = x
-    z = np.cos(x)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot(x, y, z, label='parametric curve')
+
+    k = 4
+    l = 3
+    knotX = [0, 0, 0, 0, 1, 1, 1, 1]
+    knotY = [0, 0, 0, 1, 2, 2, 2]
+
+    vertices3 = [
+        [-15, 0, 15],
+        [-5, 5, 15],
+        [5, 5, 15],
+        [15, 0, 15],
+
+        [-15, 5, 5],
+        [-5, 10, 5],
+        [5, 10, 5],
+        [15, 5, 5],
+
+        [-15, 5, -5],
+        [-5, 10, -5],
+        [5, 10, -5],
+        [15, 5, -5],
+
+        [-15, 0, -15],
+        [-5, 5, -15],
+        [5, 5, -15],
+        [15, 0, -15]
+    ]
+
+    geom = []
+    step = 0.01 * 4
+    u = 0.
+    while u < 1.:
+        w = 0.
+        while w < 2:
+            vertex = [0, 0, 0]
+            for i in range(0, 4):
+                vertex2 = [0, 0, 0]
+                for j in range(0, 4):
+                    basis = N(j, l, w, knotY)
+                    point_pos = 4 * j + i
+                    x = vertices3[point_pos][0]
+                    y = vertices3[point_pos][1]
+                    z = vertices3[point_pos][2]
+                    vertex2[0] += x * basis
+                    vertex2[1] += y * basis
+                    vertex2[2] += z * basis
+
+                basis = N(i, k, u, knotX)
+                x, y, z = vertex2[0], vertex2[1], vertex2[2]
+                vertex[0] += x * basis
+                vertex[1] += y * basis
+                vertex[2] += z * basis
+
+            geom.append(vertex)
+            w += step
+        u += step
+
+    xs = []
+    ys = []
+    zs = []
+    for p in geom:
+        xs.append(p[0])
+        ys.append(p[1])
+        zs.append(p[2])
+
+    ax.plot(xs, ys, zs, label='parametric curve')
+    xs = [x + 1. for x in xs]
+    ax.plot(xs, ys, zs, label='parametric curve')
+
     plt.show()
 
 
