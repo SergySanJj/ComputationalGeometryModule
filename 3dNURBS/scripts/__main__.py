@@ -5,56 +5,49 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
+eps = 0.001
 
-def N(i, k, t, u):
+
+def NN(i, k, u, t):
     if k == 1:
-        if u[i] <= t <= u[i + 1]:
+        if t[i] <= u < t[i + 1]:
             return 1
         else:
             return 0
 
-    if u[i + k - 1] - u[i]:
-        term_left = ((t - u[i]) * N(i, k - 1, t, u)) / (u[i + k - 1] - u[i])
-    else:
-        term_left = 0
+    d1 = (t[i + k - 1] - t[i])
+    n1 = (u - t[i])
+    s1 = 0
+    if d1 != 0 and n1 != 0:
+        s1 = n1 * NN(i, k - 1, u, t) / d1
 
-    if u[i + k] - u[i + 1]:
-        term_right = ((u[i + k] - t) * N(i + 1, k - 1, t, u)) / (u[i + k] - u[i + 1])
-    else:
-        term_right = 0
+    d2 = (t[i + k] - t[i + 1])
+    n2 = (-u + t[i + k])
+    s2 = 0
+    if d2 != 0 and n2 != 0:
+        s2 = n2 * NN(i + 1, k - 1, u, t) / d2
 
-    return term_left + term_right
+    return s1 + s2
 
 
 def main():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    k = 4
-    l = 3
-    knotX = [0, 0, 0, 0, 1, 1, 1, 1]
-    knotY = [0, 0, 0, 1, 2, 2, 2]
+    knotX = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2]
+    knotY = [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2]
+    k = len(knotX) - 1
+    l = len(knotY) - 1
 
     vertices3 = [
-        [-15, 0, 15],
-        [-5, 5, 15],
-        [5, 5, 15],
-        [15, 0, 15],
-
-        [-15, 5, 5],
-        [-5, 10, 5],
-        [5, 10, 5],
-        [15, 5, 5],
-
-        [-15, 5, -5],
-        [-5, 10, -5],
-        [5, 10, -5],
-        [15, 5, -5],
-
-        [-15, 0, -15],
-        [-5, 5, -15],
-        [5, 5, -15],
-        [15, 0, -15]
+        [1, 2, 1],
+        [2, 3, 1],
+        [3, 2, 2],
+        [4, 4, 2],
+        [5, 1, 2],
+        [6, 3, 1],
+        [7, 3, 1],
+        [9, 1, 0]
     ]
 
     geom = []
@@ -62,25 +55,26 @@ def main():
     u = 0.
     while u < 1.:
         w = 0.
-        while w < 2:
+        while w < 1:
             vertex = [0, 0, 0]
-            for i in range(0, 4):
-                vertex2 = [0, 0, 0]
-                for j in range(0, 4):
-                    basis = N(j, l, w, knotY)
-                    point_pos = 4 * j + i
-                    x = vertices3[point_pos][0]
-                    y = vertices3[point_pos][1]
-                    z = vertices3[point_pos][2]
-                    vertex2[0] += x * basis
-                    vertex2[1] += y * basis
-                    vertex2[2] += z * basis
-
-                basis = N(i, k, u, knotX)
-                x, y, z = vertex2[0], vertex2[1], vertex2[2]
-                vertex[0] += x * basis
-                vertex[1] += y * basis
-                vertex[2] += z * basis
+            for i in range(0, len(vertices3)):
+                # for j in range(0, 4):
+                #     basis = NN(j, 3, w, knotY)
+                #     point_pos = i + j
+                #     x = vertices3[point_pos][0]
+                #     y = vertices3[point_pos][1]
+                #     z = vertices3[point_pos][2]
+                #     vertex2[0] += x * basis
+                #     vertex2[1] += y * basis
+                #     vertex2[2] += z * basis
+                x = vertices3[i][0]
+                y = vertices3[i][1]
+                z = vertices3[i][2]
+                basis_x = NN(i, len(knotX) // 2 - 1, u, knotX)
+                basis_y = NN(i, len(knotY) // 2 - 1, w, knotY)
+                vertex[0] += x * basis_x
+                vertex[1] += y * basis_y
+                vertex[2] += z * basis_x * basis_y
 
             geom.append(vertex)
             w += step
@@ -94,9 +88,16 @@ def main():
         ys.append(p[1])
         zs.append(p[2])
 
-    ax.plot(xs, ys, zs, label='parametric curve')
-    xs = [x + 1. for x in xs]
-    ax.plot(xs, ys, zs, label='parametric curve')
+    ax.scatter(xs, ys, zs, label='parametric curve')
+
+    px = []
+    py = []
+    pz = []
+    for p in vertices3:
+        px.append(p[0])
+        py.append(p[1])
+        pz.append(p[2])
+        ax.scatter(px, py, pz, label='control points')
 
     plt.show()
 
