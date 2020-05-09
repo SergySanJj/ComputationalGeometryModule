@@ -1,45 +1,70 @@
-from typing import List
+from typing import List, Tuple
 
-from scripts.nurbs.nurbs import get_NURBS_points
-import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 
-eps = 0.001
+eps = 0.00001
 
 
-def NN(i, k, u, t):
-    if k == 1:
-        if t[i] <= u < t[i + 1]:
-            return 1
+def N(i: int, p: int, cur_u: float, arr_u: List[float]) -> float:
+    if p == 0:
+        if arr_u[i] <= cur_u < arr_u[i + 1]:
+            return 1.0
         else:
-            return 0
+            return 0.0
 
-    d1 = (t[i + k - 1] - t[i])
-    n1 = (u - t[i])
-    s1 = 0
-    if d1 != 0 and n1 != 0:
-        s1 = n1 * NN(i, k - 1, u, t) / d1
+    d1 = arr_u[i + p] - arr_u[i]
+    if abs(d1) < eps:
+        s1 = 0.
+    else:
+        basis = N(i, p - 1, cur_u, arr_u)
+        s1 = (cur_u - arr_u[i]) / d1 * basis
 
-    d2 = (t[i + k] - t[i + 1])
-    n2 = (-u + t[i + k])
-    s2 = 0
-    if d2 != 0 and n2 != 0:
-        s2 = n2 * NN(i + 1, k - 1, u, t) / d2
+    d2 = (arr_u[i + p + 1] - arr_u[i + 1])
+    if abs(d2) < eps:
+        s2 = 0.
+    else:
+        basis = N(i + 1, p - 1, cur_u, arr_u)
+        s2 = (arr_u[i + p + 1] - cur_u) / d2 * basis
 
     return s1 + s2
 
 
-def main():
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+def create_patch(points: List[List[float]], step=0.08) -> Tuple[List[float], List[float], List[float]]:
+    surf_x = []
+    surf_y = []
+    surf_z = []
 
-    knotX = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2]
-    knotY = [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2]
-    k = len(knotX) - 1
-    l = len(knotY) - 1
+    u = 0.0
+    while u <= 1.0:
+        v = 0.0
+        while v <= 1.0:
+            count_top_x = 0.0
+            count_top_y = 0.0
+            count_top_z = 0.0
+            count_down = 0.0
+            for i in range(2):
+                for j in range(2):
+                    Bip = N(i, order, u, U)
+                    Bjp = N(j, order, v, V)
+                    ind = i * 2 + j
+                    count_top_x += Bip * Bjp * points[ind][0]
+                    count_top_y += Bip * Bjp * points[ind][1]
+                    count_top_z += Bip * Bjp * points[ind][2]
+                    count_down += Bip * Bjp
 
-    vertices3 = [
+            if count_down != 0:
+                surf_x.append(count_top_x / count_down)
+                surf_y.append(count_top_y / count_down)
+                surf_z.append(count_top_z / count_down)
+            v += step
+
+        u += step
+    return surf_x, surf_y, surf_z
+
+
+if __name__ == '__main__':
+    vertexes = [
         [1, 2, 1],
         [2, 3, 1],
         [3, 2, 2],
@@ -50,57 +75,15 @@ def main():
         [9, 1, 0]
     ]
 
-    geom = []
-    step = 0.01 * 4
-    u = 0.
-    while u < 1.:
-        w = 0.
-        while w < 1:
-            vertex = [0, 0, 0]
-            for i in range(0, len(vertices3)):
-                # for j in range(0, 4):
-                #     basis = NN(j, 3, w, knotY)
-                #     point_pos = i + j
-                #     x = vertices3[point_pos][0]
-                #     y = vertices3[point_pos][1]
-                #     z = vertices3[point_pos][2]
-                #     vertex2[0] += x * basis
-                #     vertex2[1] += y * basis
-                #     vertex2[2] += z * basis
-                x = vertices3[i][0]
-                y = vertices3[i][1]
-                z = vertices3[i][2]
-                basis_x = NN(i, len(knotX) // 2 - 1, u, knotX)
-                basis_y = NN(i, len(knotY) // 2 - 1, w, knotY)
-                vertex[0] += x * basis_x
-                vertex[1] += y * basis_y
-                vertex[2] += z * basis_x * basis_y
+    order = 4
 
-            geom.append(vertex)
-            w += step
-        u += step
+    U = V = [0.0, 0.0, 0.0, 0.5, 0.75, 0.9, 1.0]
 
-    xs = []
-    ys = []
-    zs = []
-    for p in geom:
-        xs.append(p[0])
-        ys.append(p[1])
-        zs.append(p[2])
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
 
-    ax.scatter(xs, ys, zs, label='parametric curve')
-
-    px = []
-    py = []
-    pz = []
-    for p in vertices3:
-        px.append(p[0])
-        py.append(p[1])
-        pz.append(p[2])
-        ax.scatter(px, py, pz, label='control points')
+    ax.scatter(*create_patch(vertexes[4:8]))
+    ax.scatter(*create_patch(vertexes[2:6]))
+    ax.scatter(*create_patch(vertexes[0:4]))
 
     plt.show()
-
-
-if __name__ == '__main__':
-    main()
