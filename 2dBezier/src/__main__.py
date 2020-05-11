@@ -28,6 +28,8 @@ def vec_length(vector: List[float]) -> float:
 
 def normalize(vector: List[float]) -> List[float]:
     vec_len = vec_length(vector)
+    if abs(vec_len) < eps:
+        return [1, 1]
     return [coord / vec_len for coord in vector]
 
 
@@ -42,24 +44,30 @@ def mult(vector: List[float], multiplier: float):
     return [c * multiplier for c in vector]
 
 
+def turn(points):
+    a, b, c = points[0], points[1], points[2]
+    return (b[0] - a[1]) * \
+           (c[0] - a[0]) - \
+           (b[0] - a[0]) * \
+           (c[1] - a[1])
+
+
 def draw_segment(start_point: List[float], end_point: List[float], prev_point: List[float], next_point: List[float]):
     in_vec = normalize(vectorize(prev_point, start_point))
-    out_vec = normalize(vectorize(start_point, end_point))
-    mid = normalize([
+    out_vec = normalize(vectorize(end_point, start_point))
+    mid = mult(normalize([
         (in_vec[0] + out_vec[0]) / 2.,
         (in_vec[1] + out_vec[1]) / 2.
-    ])
-    ort = mult(normalize(orthogonal(mid)), vec_length(vectorize(start_point, end_point)) / 3.0)
-    s1 = [ort[0] + start_point[0], ort[1] + start_point[1]]
+    ]), len(vectorize(start_point, end_point)) / 2.)
+    s1 = [start_point[0] - mid[0], start_point[1] - mid[1]]
 
     in_vec = normalize(vectorize(start_point, end_point))
     out_vec = normalize(vectorize(next_point, end_point))
-    mid = normalize([
+    mid = mult(normalize([
         (in_vec[0] + out_vec[0]) / 2.,
         (in_vec[1] + out_vec[1]) / 2.
-    ])
-    ort = mult(normalize(orthogonal(mid)), vec_length(vectorize(start_point, end_point)) / 3.0)
-    s2 = [ort[0] + end_point[0], ort[1] + end_point[1]]
+    ]), len(vectorize(start_point, end_point)) / 2.)
+    s2 = [end_point[0] + mid[0], end_point[1] + mid[1]]
 
     step = 0.01
     t = 0.0
@@ -70,10 +78,11 @@ def draw_segment(start_point: List[float], end_point: List[float], prev_point: L
         segment_x.append(coords[0])
         segment_y.append(coords[1])
         t += step
-    plt.scatter(segment_x, segment_y, s=10)
+    plt.plot(segment_x, segment_y)
+    plt.scatter([s1[0], s2[0]], [s1[1], s2[1]], s=3)
 
 
-def forwarded_point(start_point: List[float], end_point: List[float], scale=1.01) -> List[float]:
+def forwarded_point(start_point: List[float], end_point: List[float], scale=1.) -> List[float]:
     vec = mult(normalize(vectorize(start_point, end_point)), scale)
     return [vec[0] + end_point[0], vec[1] + end_point[1]]
 
@@ -108,8 +117,15 @@ def main():
         [9, 1],
         [10, 3]
     ]
+    xs = []
+    ys = []
+    for p in vertexes:
+        xs.append(p[0])
+        ys.append(p[1])
 
     draw_vertex_list(vertexes)
+
+    plt.scatter(xs, ys)
     plt.show()
 
 
