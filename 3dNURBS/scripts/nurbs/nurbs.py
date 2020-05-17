@@ -5,26 +5,26 @@ import matplotlib.pyplot as plt
 eps = 0.0000001
 
 
-def N(i: int, p: int, cur_u: float, arr_u: List[float]) -> float:
+def N(i: int, p: int, cur_u: float, K: List[float]) -> float:
     if p == 0:
-        if arr_u[i] <= cur_u < arr_u[i + 1]:
+        if K[i] <= cur_u < K[i + 1]:
             return 1.0
         else:
             return 0.0
 
-    d1 = arr_u[i + p] - arr_u[i]
+    d1 = K[i + p] - K[i]
     if abs(d1) < eps:
         s1 = 0.
     else:
-        basis_blending = N(i, p - 1, cur_u, arr_u)
-        s1 = (cur_u - arr_u[i]) / d1 * basis_blending
+        basis_blending = N(i, p - 1, cur_u, K)
+        s1 = (cur_u - K[i]) / d1 * basis_blending
 
-    d2 = (arr_u[i + p + 1] - arr_u[i + 1])
+    d2 = (K[i + p + 1] - K[i + 1])
     if abs(d2) < eps:
         s2 = 0.
     else:
-        basis_blending = N(i + 1, p - 1, cur_u, arr_u)
-        s2 = (arr_u[i + p + 1] - cur_u) / d2 * basis_blending
+        basis_blending = N(i + 1, p - 1, cur_u, K)
+        s2 = (K[i + p + 1] - cur_u) / d2 * basis_blending
 
     return s1 + s2
 
@@ -47,13 +47,13 @@ def create_patch(points: List[List[float]],
             divider = 0.0
             for i in range(2):
                 for j in range(2):
-                    Bip = N(i, order, u, knot_x)
-                    Bjp = N(j, order, v, knot_y)
+                    i_basis = N(i, order, u, knot_x)
+                    j_basis = N(j, order, v, knot_y)
                     ind = i * 2 + j
-                    x += Bip * Bjp * points[ind][0]
-                    y += Bip * Bjp * points[ind][1]
-                    z += Bip * Bjp * points[ind][2]
-                    divider += Bip * Bjp
+                    x += i_basis * j_basis * points[ind][0]
+                    y += i_basis * j_basis * points[ind][1]
+                    z += i_basis * j_basis * points[ind][2]
+                    divider += i_basis * j_basis
 
             if abs(divider) > eps:
                 surf_x.append(x / divider)
