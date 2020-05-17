@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="21a49620-be85-429f-8117-a31332db3e72" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/nurbs/nurbs.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/nurbs/nurbs.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
